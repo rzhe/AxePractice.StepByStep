@@ -10,20 +10,29 @@ namespace Manualfac
         /*
          * The disposer is used for disposing all disposable items added when it is disposed.
          */
-        readonly Stack<object> items = new Stack<object>();
+        Stack<IDisposable> items = new Stack<IDisposable>();
         public void AddItemsToDispose(object item)
         {
-           items.Push(item);
+            var disposable = item as IDisposable;
+            if (disposable != null)
+            {
+                items.Push(disposable);
+            }
         }
 
         protected override void Dispose(bool disposing)
         {
-            while (items.Count > 0)
+            if (disposing)
             {
-                var item = items.Pop();
-                var disposableItem = item as IDisposable;
-                disposableItem?.Dispose();
+                while (items.Count > 0)
+                {
+                    var item = items.Pop();
+                    item.Dispose();
+                }
+                items = null;
             }
+
+            base.Dispose(disposing);
         }
 
         #endregion
