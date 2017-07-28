@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Manualfac
 {
@@ -25,7 +26,14 @@ namespace Manualfac
 
             #region Please initialize root scope
 
-            throw new NotImplementedException();
+            if (parent == null)
+            {
+                RootScope = this;
+            }
+            else
+            {
+                RootScope = parent.RootScope;
+            }
 
             #endregion
         }
@@ -57,8 +65,20 @@ namespace Manualfac
 
             #region Please implement this method
 
-            throw new NotImplementedException();
+            object result;
+            sharedInstances.TryGetValue(registration.Service, out result);
+            if (result == null)
+            {
+                result = registration.Activator.Activate(this);
+                Disposer.AddItemsToDispose(result);
+            }
 
+            if (registration.Sharing == InstanceSharing.Shared)
+            {
+                sharedInstances[registration.Service] = result;
+            }
+
+            return result;
             #endregion
         }
 
@@ -70,7 +90,7 @@ namespace Manualfac
              * Create a child life-time scope in this method.
              */
 
-            throw new NotImplementedException();
+            return new LifetimeScope(componentRegistry, this);
 
             #endregion
         }
@@ -84,7 +104,12 @@ namespace Manualfac
              * We extract this method for isolation of responsibility.
              */
 
-            throw new NotImplementedException();
+            ComponentRegistration componentRegistration;
+            if (!componentRegistry.TryGetRegistration(service, out componentRegistration))
+            {
+                throw new DependencyResolutionException();
+            }
+            return componentRegistration;
 
             #endregion
         }
